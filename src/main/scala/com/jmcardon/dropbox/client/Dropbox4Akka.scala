@@ -52,7 +52,7 @@ object Dropbox4Akka {
      * @param file
      * @return
      */
-    def uploadFile(uploadOptions: UploadFile, file: File): Future[Either[FileMetadata, Exception]]
+    def uploadFile(uploadOptions: UploadFile, file: File): Future[Either[Exception,FileMetadata]]
 
     /**
      * Download a file
@@ -60,7 +60,7 @@ object Dropbox4Akka {
      * @param downloadOptions
      * @return
      */
-    def downloadFile(downloadOptions: DownloadFile): Future[Either[Source[ByteString,Any], Exception]]
+    def downloadFile(downloadOptions: DownloadFile): Future[Either[Exception, Source[ByteString,Any]]]
 
     /**
      * Create a folder
@@ -68,7 +68,7 @@ object Dropbox4Akka {
      * @param createFolder
      * @return
      */
-    def createFolder(createFolder: CreateFolder): Future[Either[FolderMetadata,Exception]]
+    def createFolder(createFolder: CreateFolder): Future[Either[Exception,FolderMetadata]]
 
 
     /**
@@ -77,7 +77,7 @@ object Dropbox4Akka {
      * @param listFolder
      * @return
      */
-    def listFolder(listFolder: ListFolder): Future[Either[ListFolderResponse, Exception]]
+    def listFolder(listFolder: ListFolder): Future[Either[Exception,ListFolderResponse]]
 
   }
 
@@ -131,13 +131,13 @@ object Dropbox4Akka {
      * @param file
      * @return
      */
-    override def uploadFile(uploadOptions: UploadFile, file: File): Future[Either[FileMetadata, Exception]] =
+    override def uploadFile(uploadOptions: UploadFile, file: File): Future[Either[Exception,FileMetadata]] =
       dropboxUploadRequest(uploadOptions, file).flatMap{
         response =>
           Unmarshal(response.entity)
-            .to[FileMetadata].map(Left(_))
+            .to[FileMetadata].map(Right(_))
       }.recover{
-        case e: Exception => Right(e)
+        case e: Exception => Left(e)
       }
 
     /**
@@ -146,15 +146,15 @@ object Dropbox4Akka {
      * @param downloadOptions
      * @return
      */
-    override def downloadFile(downloadOptions: DownloadFile): Future[Either[Source[ByteString, Any], Exception]] =
+    override def downloadFile(downloadOptions: DownloadFile): Future[Either[Exception,Source[ByteString, Any]]] =
       dropboxRPCRequest(downloadOptions).map(
         response =>
           if(response.status == StatusCodes.OK)
-            Left(response.entity.dataBytes)
+            Right(response.entity.dataBytes)
           else
-            Right(new NoSuchElementException)
+            Left(new NoSuchElementException)
       ).recover{
-        case e: Exception => Right(e)
+        case e: Exception => Left(e)
       }
 
     /**
@@ -166,12 +166,12 @@ object Dropbox4Akka {
      * @tparam K
      * @return
      */
-    private def rpcRequest[T <: DropboxRequest : Writes : DropboxEndpoint, K<: DropboxResponse](rpc: T)(implicit unmarshaller: FromEntityUnmarshaller[K]): Future[Either[K, Exception]] =
+    private def rpcRequest[T <: DropboxRequest : Writes : DropboxEndpoint, K<: DropboxResponse](rpc: T)(implicit unmarshaller: FromEntityUnmarshaller[K]): Future[Either[Exception,K]] =
       dropboxRPCRequest(rpc).flatMap{
         response =>
-          Unmarshal(response.entity).to[K].map(Left(_))
+          Unmarshal(response.entity).to[K].map(Right(_))
       }.recover{
-        case e: Exception => Right(e)
+        case e: Exception => Left(e)
       }
 
     /**
@@ -180,7 +180,7 @@ object Dropbox4Akka {
      * @param createFolder
      * @return
      */
-    override def createFolder(createFolder: CreateFolder): Future[Either[FolderMetadata, Exception]] =
+    override def createFolder(createFolder: CreateFolder): Future[Either[Exception,FolderMetadata]] =
       rpcRequest[CreateFolder, FolderMetadata](createFolder)
 
     /**
@@ -189,7 +189,7 @@ object Dropbox4Akka {
      * @param listFolder
      * @return
      */
-    override def listFolder(listFolder: ListFolder): Future[Either[ListFolderResponse, Exception]] =
+    override def listFolder(listFolder: ListFolder): Future[Either[Exception,ListFolderResponse]] =
       rpcRequest[ListFolder, ListFolderResponse](listFolder)
   }
 
