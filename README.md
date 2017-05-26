@@ -12,7 +12,9 @@ Related docs:
 Dependencies: akka, play json support, akka-http
 
 ## Usage
-Provide your own actorsystem implementation, or use the default provided (not recommended)
+Provide your own actorsystem implementation(recommended), or use the default provided (not recommended)
+Acquire an OAuth2 access token from [the dropbox developer website](https://www.dropbox.com/developers/apps).
+Use this token to set an implicit Authorization header upon client creation.
 An example using the default client(not recommended):
 
 ```$xslt
@@ -51,13 +53,13 @@ An example with the client providing your own actorsystem
   myClient.listFolder(list).map(x => println(x))
 ```
 
-The latter is preferred as to not be running multiple different actorsystems, as well as for configuration purposes.
+The latter is preferred as to not be running multiple different ActorSystems, as well as for configuration purposes.
 
 ### Notes
 Aside from incomplete, for file uploads/downloads, the API is quirky and the base folder must be prepended with "/", but
 the base folder for a listFolder request is the empty string.
 
-When using uploadfile and downloadFile, start with "/".
+When using uploadFile and downloadFile, start with "/".
 
 ### Contribute
 Too small a repo for a PR yet.
