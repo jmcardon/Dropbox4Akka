@@ -38,7 +38,7 @@ An example with the client providing your own actorsystem
   implicit val materializer = ActorMaterializer()
   implicit val ec = actorSys.dispatcher
 
-  val myClient = DefaultClient()
+  val myClient = DropboxClient()
 
   val upload = UploadFile(
     path = "/hi.txt",
