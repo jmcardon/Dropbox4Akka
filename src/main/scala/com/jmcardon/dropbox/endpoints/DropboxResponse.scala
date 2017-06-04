@@ -54,7 +54,7 @@ case class ListFolderResponse(entries: Vector[DropboxMetadata], cursor: Option[S
 
 object ListFolderResponse {
 
-  implicit val listFolderResponseFormat = Json.format[ListFolderResponse]
+  implicit val listFolderResponseFormat: OFormat[ListFolderResponse] = Json.format[ListFolderResponse]
 
 }
 
@@ -73,14 +73,20 @@ object SharingInfo {
 }
 
 /**
- * Optional class that indicates a group of properties
+ * Dropbox PropertyGroups
  *
  * @param template_id
  * @param fields
  */
-final case class PropertyGroups(template_id: String, fields: String)
+final case class PropertyGroups(template_id: String, fields: List[PropertyGroups.PropertyGroupField])
 
 object PropertyGroups {
+  final case class PropertyGroupField(name: String, value: String)
+
+  object PropertyGroupField {
+    implicit val format: OFormat[PropertyGroupField] = Json.format[PropertyGroupField]
+  }
+
   implicit val propertyGroupsFormat: OFormat[PropertyGroups] = Json.format[PropertyGroups]
 }
 
@@ -109,13 +115,13 @@ final case class FileMetadata(name: String,
                         path_lower: String,
                         path_display: String,
                         sharing_info: Option[SharingInfo],
-                        property_groups: Option[PropertyGroups],
+                        property_groups: Option[List[PropertyGroups]],
                         has_explicit_shared_members: Option[Boolean],
                         content_hash: Option[String]
-                       )  extends DropboxResponse with DropboxMetadata
+                       ) extends DropboxResponse with DropboxMetadata
 
 object FileMetadata {
-  implicit val format = Json.format[FileMetadata]
+  implicit val format: OFormat[FileMetadata] = Json.format[FileMetadata]
 }
 
 /**
@@ -133,7 +139,7 @@ final case class FolderMetadata(name: String,
                           path_lower: String,
                           path_display: String,
                           sharing_info: Option[SharingInfo],
-                          property_groups: Option[PropertyGroups]
+                          property_groups: Option[List[PropertyGroups]]
                          )  extends DropboxResponse with DropboxMetadata
 
 object FolderMetadata {
